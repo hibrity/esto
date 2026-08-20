@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><style>
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard - Sistema Estoque</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{background:#09090b;color:#fafafa}
+.card{background:#18181b;border:1px solid #27272a;border-radius:16px;padding:20px;transition:all 0.2s}
+.card:hover{border-color:#3f3f46;transform:translateY(-2px)}
+.card-menu:hover{border-color:#00D26A;background:#1c1c1f;cursor:pointer}
+.hidden{display:none!important}
+</style>
+</head>
+<body class="min-h-screen">
+<!-- LOGIN APENAS -->
+<div id="loginSection" class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 bg-green-600 rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold mb-3">S</div>
+      <h1 class="text-2xl font-bold">Sistema de Estoque</h1>
+      <p class="text-zinc-500 text-sm mt-1">Faça login para continuar</p>
+    </div>
+    <div class="card">
+      <input id="email" placeholder="seu@email.com" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 mb-3 outline-none focus:border-green-600">
+      <input id="pass" type="password" placeholder="senha" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-3 mb-4 outline-none focus:border-green-600">
+      <button onclick="login()" class="w-full bg-green-600 hover:bg-green-700 py-3 rounded-lg font-bold mb-2">Entrar</button>
+      <button onclick="signup()" class="w-full bg-zinc-800 hover:bg-zinc-700 py-3 rounded-lg text-sm">Criar conta</button>
+      <p id="msg" class="text-sm mt-3 text-center text-zinc-400"></p>
+    </div>
+  </div>
+</div>
+
+<!-- APP SO APOS LOGIN -->
+<div id="appSection" class="hidden">
+  <nav class="bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center font-bold">S</div>
+      <span class="font-bold">Estoque</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span id="userEmail" class="text-xs text-zinc-400"></span>
+      <button onclick="logout()" class="text-xs bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg">Sair</button>
+    </div>
+  </nav>
+
+  <main class="p-4 max-w-6xl mx-auto">
+    <h1 class="text-2xl font-bold mb-1">Dashboard</h1>
+    <p class="text-zinc-500 text-sm mb-6">Bem-vindo, escolha uma função abaixo</p>
+
+    <!-- STATS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8" id="stats"></div>
+
+    <!-- CARDS DE FUNCOES - SO APARECEM APOS LOGIN -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      
+      <div onclick="location.href='produtos.html'" class="card card-menu">
+        <div class="flex items-start justify-between">
+          <div class="w-12 h-12 bg-blue-600/20 border border-blue-600/30 rounded-xl flex items-center justify-center text-2xl">📦</div>
+          <span class="text-xs bg-zinc-800 px-2 py-1 rounded">Produtos</span>
+        </div>
+        <h3 class="font-bold text-lg mt-3">Produtos</h3>
+        <p class="text-sm text-zinc-400 mt-1">Cadastro, edição, estoque e geração de QR Code</p>
+      </div>
+
+      <div onclick="location.href='entrada.html'" class="card card-menu">
+        <div class="flex items-start justify-between">
+          <div class="w-12 h-12 bg-green-600/20 border border-green-600/30 rounded-xl flex items-center justify-center text-2xl">📥</div>
+          <span class="text-xs bg-zinc-800 px-2 py-1 rounded">Entrada</span>
+        </div>
+        <h3 class="font-bold text-lg mt-3">Entrada NF-e</h3>
+        <p class="text-sm text-zinc-400 mt-1">Leitura automática de XML e PDF de nota fiscal</p>
+      </div>
+
+      <div onclick="location.href='saida.html'" class="card card-menu">
+        <div class="flex items-start justify-between">
+          <div class="w-12 h-12 bg-red-600/20 border border-red-600/30 rounded-xl flex items-center justify-center text-2xl">📤</div>
+          <span class="text-xs bg-zinc-800 px-2 py-1 rounded">Saída</span>
+        </div>
+        <h3 class="font-bold text-lg mt-3">Saída QR</h3>
+        <p class="text-sm text-zinc-400 mt-1">Baixa no estoque com leitor de QR Code + alerta</p>
+      </div>
+
+      <div onclick="location.href='fornecedores.html'" class="card card-menu">
+        <div class="flex items-start justify-between">
+          <div class="w-12 h-12 bg-purple-600/20 border border-purple-600/30 rounded-xl flex items-center justify-center text-2xl">🏭</div>
+          <span class="text-xs bg-zinc-800 px-2 py-1 rounded">Fornecedores</span>
+        </div>
+        <h3 class="font-bold text-lg mt-3">Fornecedores</h3>
+        <p class="text-sm text-zinc-400 mt-1">Cadastro e comparação de preços por produto</p>
+      </div>
+
+      <div onclick="location.href='compras.html'" class="card card-menu">
+        <div class="flex items-start justify-between">
+          <div class="w-12 h-12 bg-yellow-600/20 border border-yellow-600/30 rounded-xl flex items-center justify-center text-2xl">🛒</div>
+          <span class="text-xs bg-green-900/30 text-green-400 border border-green-800 px-2 py-1 rounded text-[10px]">AUTO</span>
+        </div>
+        <h3 class="font-bold text-lg mt-3">Compras Auto</h3>
+        <p class="text-sm text-zinc-400 mt-1">Requisição automática buscando melhor preço</p>
+      </div>
+
+      <div onclick="location.href='alertas.html'" class="card card-menu">
+        <div class="flex items-start justify-between">
+          <div class="w-12 h-12 bg-orange-600/20 border border-orange-600/30 rounded-xl flex items-center justify-center text-2xl">🚨</div>
+          <span class="text-xs bg-zinc-800 px-2 py-1 rounded">Alertas</span>
+        </div>
+        <h3 class="font-bold text-lg mt-3">Alertas</h3>
+        <p class="text-sm text-zinc-400 mt-1">Histórico de todas as saídas do estoque</p>
+      </div>
+
+      <div onclick="location.href='coletor.html'" class="card card-menu border-dashed border-green-600/40 bg-green-950/10">
+        <div class="flex items-start justify-between">
+          <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center text-2xl">📱</div>
+          <span class="text-xs bg-green-600 text-black px-2 py-1 rounded font-bold">MOBILE</span>
+        </div>
+        <h3 class="font-bold text-lg mt-3">Coletor</h3>
+        <p class="text-sm text-zinc-400 mt-1">App coletor rápido com BIP para baixa em lote</p>
+      </div>
+
+    </div>
+
+    <!-- ULTIMAS MOVIMENTACOES -->
+    <div class="card mt-8">
+      <h2 class="font-bold mb-3">Últimas movimentações</h2>
+      <div id="lista" class="text-sm"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL="https://zyjonbvxmsvgcexahusj.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp5am9uYnZ4bXN2Z2NleGFodXNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMDg0ODEsImV4cCI6MjEwMjc4NDQ4MX0.5KrFCYI2Nv2U0dPqe6OmhxdCQLeI47wswNsgDqO4bok";
+const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+async function checkAuth(){
+  const {data} = await supabase.auth.getSession();
+  if(data.session){
+    // LOGADO - mostra app
+    document.getElementById('loginSection').classList.add('hidden');
+    document.getElementById('appSection').classList.remove('hidden');
+    document.getElementById('userEmail').textContent = data.session.user.email;
+    loadDash();
+  } else {
+    // NAO LOGADO - mostra só login
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('appSection').classList.add('hidden');
+  }
+}
+
+async function login(){
+  const e=document.getElementById('email').value,p=document.getElementById('pass').value;
+  const {error}=await supabase.auth.signInWithPassword({email:e,password:p});
+  document.getElementById('msg').textContent=error?error.message:'Logado! Abrindo...';
+  if(!error){ checkAuth(); }
+}
+async function signup(){
+  const e=document.getElementById('email').value,p=document.getElementById('pass').value;
+  const {error}=await supabase.auth.signUp({email:e,password:p});
+  document.getElementById('msg').textContent=error?error.message:'Conta criada! Agora faça login.';
+}
+async function logout(){
+  await supabase.auth.signOut();
+  location.reload();
+}
+async function loadDash(){
+  const {data:prods}=await supabase.from('produtos').select('*');
+  const {data:movs}=await supabase.from('movimentacoes').select('*').order('created_at',{ascending:false}).limit(8);
+  const {data:reqs}=await supabase.from('requisicoes').select('*').eq('status','pendente');
+  let total=prods?prods.reduce((a,b)=>a+(b.qtd||0),0):0;
+  let valor=prods?prods.reduce((a,b)=>a+((b.qtd||0)*(b.preco_medio||0)),0):0;
+  let crit=prods?prods.filter(p=>p.qtd<=p.qtd_min).length:0;
+  document.getElementById('stats').innerHTML=`<div class=card><div class=text-zinc-400 text-xs>Total Itens</div><div class=text-2xl font-bold>${total}</div></div><div class=card><div class=text-zinc-400 text-xs>Valor Estoque</div><div class=text-2xl font-bold>R$ ${valor.toFixed(2)}</div></div><div class=card><div class=text-zinc-400 text-xs>Críticos</div><div class=text-2xl font-bold text-red-400>${crit}</div></div><div class=card><div class=text-zinc-400 text-xs>Requisições</div><div class=text-2xl font-bold>${reqs?reqs.length:0}</div></div>`;
+  document.getElementById('lista').innerHTML=(movs||[]).map(m=>`<div class="border-b border-zinc-800 py-2 flex justify-between"><span>${m.tipo.toUpperCase()} - ${m.sku} - ${m.qtd} un</span><span class="text-zinc-500 text-xs">${new Date(m.created_at).toLocaleString()}</span></div>`).join('')||'<div class="text-zinc-500">Nenhuma movimentação ainda</div>';
+}
+checkAuth();
+</script>
+<script>(function(){var loc=location.href.replace(/#.*$/,"");var ATTR_NAMES=["data-product-id","data-productid","data-product_id","product-id","productid","product_id","data-source-entity-id","source-entity-id","source_entity_id","data-product","data-metadata","data-meta"];var DATASET_KEYS=["productId","productid","product_id","sourceEntityId","sourceentityid","source_entity_id","product","metadata","meta"];function readProductId(value){if(typeof value!=="string"||value.length===0)return null;if(/^[0-9]{6,}$/.test(value))return value;var match=value.match(/(?:product(?:_|-)?id|source(?:_|-)?entity(?:_|-)?id)["'=:\s]+([0-9]{6,})/i);return match?match[1]:null}function extractProductId(start){for(var node=start;node&&node!==document.body;node=node.parentElement){for(var i=0;i<ATTR_NAMES.length;i++){var attrValue=node.getAttribute&&node.getAttribute(ATTR_NAMES[i]);var attrProductId=readProductId(attrValue);if(attrProductId)return attrProductId}var dataset=node.dataset||null;if(dataset){for(var j=0;j<DATASET_KEYS.length;j++){var dataValue=dataset[DATASET_KEYS[j]];var dataProductId=readProductId(dataValue);if(dataProductId)return dataProductId}}}return null}function isInlineMediaSlotElement(node){return !!(node&&node.getAttribute&&node.getAttribute("data-clippy-inline-media-slot")!==null)}function findInlineMediaSlot(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(isInlineMediaSlotElement(node))return node}return null}function readInlineMediaUrl(node){if(!node)return null;return node.getAttribute&&((node.getAttribute("data-clippy-inline-media-url")||node.getAttribute("data-url")||node.getAttribute("data_url")))||node.href||null}function stripHash(url){return String(url).replace(/#.*$/,"")}function urlsMatch(a,b){if(!a||!b)return false;try{return stripHash(new URL(a,loc).href)===stripHash(new URL(b,loc).href)}catch(_){return stripHash(a)===stripHash(b)}}function isFirstPartyReelUrl(value){try{var url=new URL(value,loc);if(url.protocol!=="https:")return false;var host=url.hostname.toLowerCase();var supported=host==="instagram.com"||host.endsWith(".instagram.com")||host==="facebook.com"||host.endsWith(".facebook.com");return supported&&/\/reels?\//i.test(url.pathname)}catch(_){return false}}function isInlineMediaUrlClick(node,href){var slot=findInlineMediaSlot(node);if(!slot)return false;var slotUrl=readInlineMediaUrl(slot);if(slotUrl)return urlsMatch(href,slotUrl);return isFirstPartyReelUrl(href)}function findDataHref(start){for(var node=start;node&&node!==document.body;node=node.parentElement){if(node.getAttribute){var href=node.getAttribute("data-href")||node.getAttribute("data-url");if(href)return{href:href,node:node}}}return null}var nativeOpen=window.open;window.open=function(url){if(parent!==window&&typeof url==="string"&&/^https?:\/\//.test(url)){parent.postMessage({type:"ecto:usercontent-link-click",href:url},"*");return null}return nativeOpen?nativeOpen.apply(window,arguments):null};document.addEventListener("click",function(e){var target=e.target instanceof Element?e.target:null;if(!target)return;if(parent===window)return;var a=target.closest?target.closest("a[href]"):null;if(a&&a.href&&/^https?:\/\//.test(a.href)&&a.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(a,a.href))return;var productId=extractProductId(target)||extractProductId(a);if(productId){e.preventDefault();parent.postMessage({type:"ecto-artifact-link-click",productId:productId},"*");return}e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:a.href},"*");return}var dataHref=findDataHref(target);if(dataHref&&/^https?:\/\//.test(dataHref.href)&&dataHref.href.replace(/#.*$/,"")!==loc){if(isInlineMediaUrlClick(dataHref.node,dataHref.href))return;e.preventDefault();parent.postMessage({type:"ecto:usercontent-link-click",href:dataHref.href},"*")}},true)})();</script><script>(function(){var FOCUS_TYPE="ecto:artifact-focus-request";var CLOSE_TYPE="ecto:artifact-close-request";function focusArtifactDocument(){var body=document.body;if(!body)return;try{window.focus();}catch(e){}if(!body.hasAttribute("tabindex"))body.setAttribute("tabindex","-1");try{body.focus({preventScroll:true});}catch(e){try{body.focus();}catch(e2){}}}window.addEventListener("message",function(event){if(event.source!==window.parent)return;var data=event.data;if(!data||typeof data!=="object"||data.type!==FOCUS_TYPE)return;if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",focusArtifactDocument,{once:true});return;}focusArtifactDocument();});window.addEventListener("keydown",function(event){if(event.key!=="Escape")return;window.setTimeout(function(){if(event.defaultPrevented)return;window.parent.postMessage({type:CLOSE_TYPE},"*");},0);});})();</script></body>
+</html>
